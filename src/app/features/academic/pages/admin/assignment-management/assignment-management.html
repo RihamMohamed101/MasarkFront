@@ -1,0 +1,93 @@
+<div class="p-6 max-w-6xl mx-auto">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">إدارة التكليفات والواجبات (Assignments)</h2>
+
+  <div class="bg-gray-50 p-4 rounded-lg border mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">المرحلة الدراسية:</label>
+      <select [(ngModel)]="selectedGradeId" (change)="onGradeChange()" class="w-full border p-2 rounded bg-white text-gray-700 outline-none focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let grade of grades" [value]="grade.gradeId">{{ grade.nameAr }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">الفصل المستهدف:</label>
+      <select [(ngModel)]="selectedClassId" (change)="checkAndLoadAssignments()" class="w-full border p-2 rounded bg-white text-gray-700 outline-none focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let cls of classes" [value]="cls.classId">{{ cls.name }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">المادة الدراسية:</label>
+      <select [(ngModel)]="selectedSubjectId" (change)="checkAndLoadAssignments()" class="w-full border p-2 rounded bg-white text-gray-700 outline-none focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let sbj of subjects" [value]="sbj.subjectId">{{ sbj.nameAr }} ({{ sbj.name }})</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded-lg shadow-sm border mb-8" *ngIf="selectedClassId && selectedSubjectId">
+    <h3 class="text-lg font-semibold mb-4 text-gray-700">نشر تكليف جديد لهذا الفصل</h3>
+    <form (ngSubmit)="addAssignment()" #assignForm="ngForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-600 mb-1">عنوان الواجب / التكليف</label>
+          <input type="text" [(ngModel)]="newAssignment.title" name="title" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="مثال: شيت حل مسائل الـ Loops">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">الدرجة الإجمالية (Points)</label>
+          <input type="number" [(ngModel)]="newAssignment.maxPoints" name="maxPoints" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" min="1">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">التفاصيل أو المطلوب (Instructions)</label>
+        <textarea [(ngModel)]="newAssignment.description" name="description" rows="3" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="اكتب هنا المطلوب من الطلاب بالتفصيل..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">آخر موعد للتسليم (Due Date)</label>
+          <input type="datetime-local" [(ngModel)]="newAssignment.dueDate" name="dueDate" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <button type="submit" [disabled]="!assignForm.form.valid" class="bg-blue-600 hover:bg-blue-700 text-white font-medium p-2 rounded transition-colors disabled:bg-gray-300">
+          نشر التكليف للطلاب 🚀
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+      <h3 class="font-semibold text-gray-700">التكليفات الحالية</h3>
+      <span *ngIf="isLoading" class="text-sm text-blue-600 animate-pulse">جاري التحميل...</span>
+    </div>
+
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-gray-100 text-gray-700 uppercase text-sm border-b">
+          <th class="p-4">العنوان</th>
+          <th class="p-4">آخر موعد للتسليم</th>
+          <th class="p-4">الدرجة</th>
+          <th class="p-4">الحالة</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-600 text-sm">
+        <tr *ngFor="let assign of assignments" class="border-b hover:bg-gray-50 transition-colors">
+          <td class="p-4">
+            <div class="font-semibold text-gray-800">{{ assign.title }}</div>
+            <div class="text-xs text-gray-400 mt-1 truncate max-w-md">{{ assign.description }}</div>
+          </td>
+          <td class="p-4 text-red-600 font-medium">{{ assign.dueDate | date:'medium' }}</td>
+          <td class="p-4 font-bold text-blue-600">{{ assign.maxPoints }} درجات</td>
+          <td class="p-4">
+            <span class="px-2 py-1 rounded text-xs" [ngClass]="assign.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
+              {{ assign.isActive ? 'مفتوح للتقديم' : 'مغلق' }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="assignments.length === 0 && !isLoading">
+          <td colspan="4" class="p-8 text-center text-gray-400">لا توجد تكليفات منشورة لهذا الفصل والمادة حتى الآن.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,164 @@
+<div class="container py-4">
+
+  <h2 class="mb-4 fw-bold">
+    إدارة الفصول الدراسية (Classes Management)
+  </h2>
+
+  <!-- Filters -->
+  <div class="card mb-4 bg-light">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+
+        <!-- Grade -->
+        <div class="col-md-4">
+          <label class="form-label">المرحلة الدراسية</label>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedGradeId"
+            (change)="onFilterChange()"
+          >
+            <option *ngFor="let grade of grades" [value]="grade.gradeId">
+              {{ grade.nameAr }} ({{ grade.name }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Year -->
+        <div class="col-md-4">
+          <label class="form-label">السنة الدراسية</label>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedYear"
+            (change)="onFilterChange()"
+          >
+            <option [value]="2025">2025 / 2026</option>
+            <option [value]="2026">2026 / 2027</option>
+          </select>
+        </div>
+
+        <!-- Loading -->
+        <div class="col-md-4">
+          <div
+            *ngIf="isLoadingGrades || isLoadingClasses"
+            class="text-primary small"
+          >
+            جاري تحديث البيانات...
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Class -->
+  <div class="card mb-4" *ngIf="selectedGradeId">
+
+    <div class="card-body">
+
+      <h5 class="card-title mb-3">
+        إضافة فصل جديد للفلاتر المختارة
+      </h5>
+
+      <form (ngSubmit)="addClass()" #classForm="ngForm" class="row g-3">
+
+        <!-- Class Name -->
+        <div class="col-md-4">
+          <label class="form-label">اسم الفصل</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newClass.name"
+            name="className"
+            required
+            placeholder="مثال: فصل 1/1 أو Group A"
+          />
+        </div>
+
+        <!-- Max Capacity -->
+        <div class="col-md-4">
+          <label class="form-label">السعة القصوى</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newClass.maxCapacity"
+            name="maxStudents"
+            min="1"
+          />
+        </div>
+
+        <!-- Button -->
+        <div class="col-md-4 d-flex align-items-end">
+          <button
+            type="submit"
+            class="btn btn-primary w-100"
+            [disabled]="!classForm.form.valid"
+          >
+            إضافة الفصل
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card shadow-sm">
+
+    <div class="card-header fw-bold">
+      الفصول القائمة حالياً
+    </div>
+
+    <div class="table-responsive">
+
+      <table class="table table-hover mb-0">
+
+        <thead class="table-light">
+          <tr>
+            <th>اسم الفصل</th>
+            <th>السنة الدراسية</th>
+            <th>السعة</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let cls of classes">
+
+            <td class="fw-semibold text-dark">
+              {{ cls.name }}
+            </td>
+
+            <td>
+              {{ cls.academicYear }}
+            </td>
+
+            <td>
+              <span class="badge bg-primary">
+                {{ cls.maxCapacity || 30 }} طالب
+              </span>
+            </td>
+
+            <td>
+              <span [ngClass]="cls.isActive ? 'text-success fw-semibold' : 'text-danger'">
+                {{ cls.isActive ? 'نشط' : 'مغلق' }}
+              </span>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="classes.length === 0 && !isLoadingClasses">
+            <td colspan="4" class="text-center text-muted py-4">
+              لا توجد فصول مضافة مسبقاً لهذه الاختيارات.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+  </div>
+
+</div>
