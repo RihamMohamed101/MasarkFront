@@ -1,1 +1,129 @@
-<p>dashboard-layout works!</p>
+<div class="min-h-screen bg-slate-100 flex font-sans" dir="rtl">
+  <aside
+    class="w-64 bg-white border-l border-slate-200 fixed inset-y-0 right-0 z-20 flex flex-col justify-between p-6"
+  >
+    <div class="space-y-8">
+      <div class="flex items-center gap-2 px-2">
+        <span class="text-2xl font-black text-blue-600">مدرستي</span>
+        <div
+          class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold"
+        >
+          م
+        </div>
+      </div>
+
+      <nav class="space-y-2">
+        @if (userRole === 'student') {
+          <a
+            routerLink="student"
+            routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>📊</span> لوحة التحكم للطالب
+          </a>
+          <a
+            routerLink="student/courses"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>📚</span> دروسي
+          </a>
+
+          <a
+            routerLink="student/library"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>📚</span> مكتبه الدروس
+          </a>
+
+          <a
+            routerLink="student/assignments"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>📚</span> الواجبات
+          </a>
+        } @else if (userRole === 'teacher') {
+          <a
+            routerLink="teacher"
+            routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>👨‍🏫</span> لوحة المدرس
+          </a>
+          <a
+            routerLink="teacher/courses"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>👥</span> المقررات الدراسيه
+          </a>
+
+          <a
+            routerLink="teacher/students"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>👥</span> الطلاب
+          </a>
+
+          <a
+            routerLink="teacher/assignments"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>👥</span> الواجبات
+          </a>
+        } @else if (userRole === 'admin') {
+          <a
+            routerLink="admin"
+            routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>👑</span> نظرة عامة للمدير
+          </a>
+
+          <a
+            routerLink="admin/users"
+            routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>👑</span> المستخدمون
+          </a>
+        }
+      </nav>
+    </div>
+
+    <button
+      class="flex items-center gap-3 px-4 py-3 rounded-xl text-rose-600 font-semibold hover:bg-rose-50 transition-colors"
+    >
+      <span>🚪</span> تسجيل الخروج
+    </button>
+  </aside>
+
+  <div class="flex-1 mr-64 flex flex-col min-h-screen">
+    <header
+      class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10"
+    >
+      <div class="relative w-80">
+        <input
+          type="text"
+          placeholder="ابحث عن أي شيء..."
+          class="w-full pr-10 pl-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <span class="absolute right-3 top-2.5 text-slate-400">🔍</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="text-left md:text-right">
+          <h4 class="font-bold text-slate-800">{{ userName }}</h4>
+          <p class="text-xs text-slate-500">{{ userRoleDisplay }}</p>
+        </div>
+        <img
+          [src]="userAvatar"
+          class="w-10 h-10 rounded-full object-cover border-2 border-blue-100"
+          alt="Avatar"
+        />
+      </div>
+    </header>
+
+    <main class="p-8 flex-1">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
