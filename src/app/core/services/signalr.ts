@@ -1,65 +1,88 @@
-import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { Message } from '../../features/signalR/models/message';
-import { SendMessageDto } from '../../features/signalR/models/SendMessageDto';
+import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
-export class ChatService {
-  private hubConnection!: signalR.HubConnection;
+export class ChatSignalRService {
 
-  private baseUrl = 'https://localhost:7175';
+  private hubConnection?: signalR.HubConnection;
 
-  public messages = signal<Message[]>([]);
+  messages$ = new BehaviorSubject<any | null>(null);
 
-  constructor(private http: HttpClient) {}
+  userJoined$ = new BehaviorSubject<string | null>(null);
 
-  public startConnection(): void {
+  userLeft$ = new BehaviorSubject<string | null>(null);
+
+  startConnection(token: string) {
+
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${this.baseUrl}/chathub`)
+      .withUrl(
+        `${environment.apiUrl.replace('/api', '')}/hubs/chat`,
+        {
+          accessTokenFactory: () => token
+        }
+      )
       .withAutomaticReconnect()
       .build();
 
-    this.hubConnection
-      .start()
-      .then(() => console.log('تم الاتصال بنجاح مع SignalR Hub'))
-      .catch((err) => {
-        console.error('فشل الاتصال بالخادم، يرجى التأكد من عمل الـ Backend:', err);
-      });
+    this.registerEvents();
 
-    this.hubConnection.on('MessageReceived', (message: Message) => {
-      this.messages.update((currentMessages) => [...currentMessages, message]);
-    });
+    return this.hubConnection.start();
   }
 
-  public joinRoom(roomId: number): void {
-    if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection
-        .invoke('JoinRoom', roomId.toString())
-        .catch((err) => console.error('خطأ أثناء الانضمام للغرفة:', err));
-    }
+  private registerEvents() {
+
+    this.hubConnection?.on(
+      'ReceiveMessage',
+      message => {
+        this.messages$.next(message);
+      }
+    );
+
+    this.hubConnection?.on(
+      'UserJoined',
+      username => {
+        this.userJoined$.next(username);
+      }
+    );
+
+    this.hubConnection?.on(
+      'UserLeft',
+      username => {
+        this.userLeft$.next(username);
+      }
+    );
   }
 
-  public leaveRoom(roomId: number): void {
-    if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection
-        .invoke('LeaveRoom', roomId.toString())
-        .catch((err) => console.error('خطأ أثناء مغادرة الغرفة:', err));
-    }
+  joinRoom(roomId: number) {
+    return this.hubConnection?.invoke(
+      'JoinRoom',
+      roomId
+    );
   }
 
-  public loadMessageHistory(roomId: number): void {
-    this.http.get<Message[]>(`${this.baseUrl}/api/chat/${roomId}`).subscribe({
-      next: (history) => this.messages.set(history),
-      error: (err) => console.error('خطأ في جلب الرسائل:', err),
-    });
+  leaveRoom(roomId: number) {
+    return this.hubConnection?.invoke(
+      'LeaveRoom',
+      roomId
+    );
   }
 
-  public sendMessage(dto: SendMessageDto): void {
-    this.http.post<Message>(`${this.baseUrl}/api/chat`, dto).subscribe({
-      error: (err) => console.error('خطأ في إرسال الرسالة:', err),
-    });
+  sendMessage(
+    roomId: number,
+    content: string
+  ) {
+    return this.hubConnection?.invoke(
+      'SendMessage',
+      roomId,
+      content
+    );
+  }
+
+  stopConnection() {
+    return this.hubConnection?.stop();
   }
 }

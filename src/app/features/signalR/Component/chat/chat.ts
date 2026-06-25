@@ -1,49 +1,58 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../../../core/services/signalr';
+import { ChatApiService } from '../../services/chat-api-service';
+import { ChatSignalRService } from '../../../../core/services/signalr';
+import { ChatStore } from '../../services/chat.store';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './chat.html',
 })
-export class ChatComponent implements OnInit, OnDestroy {
-  chatService = inject(ChatService);
+export class Chat implements OnInit {
+  private api = inject(ChatApiService);
+  private signalr = inject(ChatSignalRService);
+  store = inject(ChatStore);
 
-  roomId: number = 1; // يمكن جعلها ديناميكية بناءً على اختيار المستخدم
-  newMessageContent: string = '';
-  currentUser: string = ' '; // في الشاشة التانية غيريها لـ 'UserB'
+  roomId = 13;
 
-  ngOnInit(): void {
-    //  هعملها من login  بعد كده لا تنسي
-    this.currentUser =
-      prompt('من فضلك أدخل اسمك للدردشة:') || 'User_' + Math.floor(Math.random() * 1000);
-    // 1. بدء الاتصال عند تحميل المكون
-    this.chatService.startConnection();
+  message = '';
 
-    // 2. تأخير بسيط لضمان فتح الاتصال قبل الانضمام للغرفة
-    setTimeout(() => {
-      this.chatService.joinRoom(this.roomId);
-      this.chatService.loadMessageHistory(this.roomId);
-    }, 1000);
-  }
+  async ngOnInit() {
+    const token = localStorage.getItem('masarak_access_token')!;
 
-  ngOnDestroy(): void {
-    // مغادرة الغرفة عند الخروج من الصفحة
-    this.chatService.leaveRoom(this.roomId);
-  }
+    await this.signalr.startConnection(token);
 
-  sendMessage(): void {
-    if (!this.newMessageContent.trim()) return;
+    await this.signalr.joinRoom(this.roomId);
 
-    this.chatService.sendMessage({
-      roomId: this.roomId,
-      senderName: this.currentUser, // إرسال اسم المستخدم مع الرسالة
-      content: this.newMessageContent,
+    this.loadMessages();
+
+    this.signalr.messages$.subscribe((msg) => {
+      if (!msg) return;
+
+      this.store.addMessage(msg);
     });
+  }
 
-    this.newMessageContent = ''; // تفريغ حقل الإدخال
+  loadMessages() {
+    this.api.getMessages(this.roomId).subscribe({
+      next: (res) => {
+        console.log('MESSAGES', res);
+        this.store.setMessages(res.items);
+      },
+      error: (err) => {
+        console.error('LOAD ERROR', err);
+      },
+    });
+  }
+
+  send() {
+    if (!this.message.trim()) return;
+
+    this.signalr.sendMessage(this.roomId, this.message);
+
+    this.message = '';
   }
 }

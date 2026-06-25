@@ -9,7 +9,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class DashboardLayoutComponent implements OnInit {
   // المتغيرات دي في الشغل الحقيقي هنجيبها من الـ AuthService
-  userRole: string = 'teacher'; // ممكن تكون 'student' أو 'teacher' أو 'admin'
+  userRole: string = 'student'; // ممكن تكون 'student' أو 'teacher' أو 'admin'
   userName: string = 'محمد أحمد';
   userAvatar: string = 'assets/student-avatar.jpg';
   userRoleDisplay: string = 'الصف العاشر';

@@ -1,5 +1,7 @@
-export interface SendMessageDto {
-  roomId: number;
-  senderName: string; // <-- الحقل الجديد
-  content: string;
+export interface ChatRoom {
+  chatRoomId: number;
+  name: string;
+  roomType: string;
+  gradeId?: number;
+  messageCount: number;
 }

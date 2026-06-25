@@ -1,8 +1,9 @@
-export interface Message {
-  id?: number;
-  roomId: number;
-  
-senderName: string; // <-- الحقل الجديد
+export interface ChatMessage {
+  messageId: number;
+  chatRoomId: number;
+  senderUserId: number;
+  senderName: string;
   content: string;
-  createdAt: Date;
+  sentAt: string;
+  isDeleted: boolean;
 }

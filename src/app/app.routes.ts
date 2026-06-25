@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
-import { ChatComponent } from './features/signalR/Component/chat/chat';
+import { Chat } from './features/signalR/Component/chat/chat';
 import { Landing } from './features/landing/landing';
-import { Login } from './features/auth/login/login';
 import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-layout';
 import { AdminComponent } from './features/admin/adminComponent/admin';
 import { TeacherComponent } from './features/teacher/teacherComponent/teacher';
@@ -13,6 +12,7 @@ import { TeacherStudents } from './features/teacher/components/teacher-students/
 import { TeacherAssignments } from './features/teacher/components/teacher-assignments/teacher-assignments';
 import { LessonLibrary } from './features/student/components/lesson-library/lesson-library';
 import { StudentAssignments } from './features/student/components/student-assignments/student-assignments';
+import { guestGuard } from './core/guards/guest-guard-guard';
 // import { AuthGuard, AdminGuard, TeacherGuard, StudentGuard, SubscriptionGuard } from '../core/guards';
 
 export const routes: Routes = [
@@ -20,6 +20,44 @@ export const routes: Routes = [
     path: '',
     component: Landing,
     pathMatch: 'full',
+  },
+
+  {
+    path: 'auth',
+    canActivate: [guestGuard],
+    children: [
+      {
+        path: 'login',
+        loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+      },
+      {
+        path: 'register',
+        loadComponent: () => import('./features/auth/signup/signup').then((m) => m.Signup),
+      },
+      {
+        path: 'ChangePassword',
+        loadComponent: () =>
+          import('./features/auth/change-password-component/change-password-component').then(
+            (m) => m.ChangePasswordComponent,
+          ),
+      },
+
+      {
+        path: 'ForgotPassword',
+        loadComponent: () =>
+          import('./features/auth/forgot-password-component/forgot-password-component').then(
+            (m) => m.ForgotPasswordComponent,
+          ),
+      },
+
+      {
+        path: 'ResetPassword',
+        loadComponent: () =>
+          import('./features/auth/reset-password-component/reset-password-component').then(
+            (m) => m.ResetPasswordComponent,
+          ),
+      },
+    ],
   },
 
   {
@@ -57,81 +95,40 @@ export const routes: Routes = [
       }, // محتوى المدير
     ],
   },
-
-  { path: 'login', component: Login },
   {
     path: 'chat',
-    component: ChatComponent,
-  },
-  {
-    path: 'admin/grades',
-    loadComponent: () =>
-      import('./features/academic/pages/admin/grade-management/grade-management').then(
-        (c) => c.GradeManagement,
-      ),
-    // canActivate: [AuthGuard, AdminGuard]
-  },
-  {
-    path: 'admin/classes',
-    loadComponent: () =>
-      import('./features/academic/pages/admin/class-management/class-management').then(
-        (c) => c.ClassManagement,
-      ),
-    // canActivate: [AuthGuard, AdminGuard]
-  },
-  {
-    path: 'admin/subjects',
-    loadComponent: () =>
-      import('./features/academic/pages/admin/subject-management/subject-management').then(
-        (c) => c.SubjectManagement,
-      ),
-    // canActivate: [AuthGuard, AdminGuard]
-  },
-  {
-    path: 'admin/assignments',
-    loadComponent: () =>
-      import('./features/academic/pages/admin/assignment-management/assignment-management').then(
-        (c) => c.AssignmentManagement,
-      ),
-    // canActivate: [AuthGuard, AdminGuard]
+    component: Chat,
   },
 
   {
-    path: 'teacher/assignments',
+    path: 'plans',
     loadComponent: () =>
-      import('./features/academic/pages/teacher/my-assignments/my-assignments').then(
-        (c) => c.MyAssignments,
+      import('./features/subscription/components/plans-component/plans-component').then(
+        (m) => m.PlansComponent,
       ),
-    // canActivate: [AuthGuard, TeacherGuard]
-  },
-  {
-    path: 'teacher/sessions',
-    loadComponent: () =>
-      import('./features/academic/pages/teacher/my-sessions/my-sessions').then((c) => c.MySessions),
-    // canActivate: [AuthGuard, TeacherGuard]
-  },
-  {
-    path: 'teacher/sessions/new',
-    loadComponent: () =>
-      import('./features/academic/pages/teacher/session-scheduler/session-scheduler').then(
-        (c) => c.SessionScheduler,
-      ),
-    // canActivate: [AuthGuard, TeacherGuard]
   },
 
-  // ==========================================
-  // Student Routes (مسارات الطالب)
-  // ==========================================
   {
-    path: 'student/schedule',
+    path: 'my-subscription',
     loadComponent: () =>
-      import('./features/academic/pages/student/my-schedule/my-schedule').then((c) => c.MySchedule),
-    // canActivate: [AuthGuard, StudentGuard, SubscriptionGuard]
+      import('./features/subscription/components/my-subscription-component/my-subscription-component').then(
+        (m) => m.MySubscriptionComponent,
+      ),
   },
+
   {
-    path: 'student/my-class',
+    path: 'checkout-success',
     loadComponent: () =>
-      import('./features/academic/pages/student/my-class/my-class').then((c) => c.MyClass),
-    // canActivate: [AuthGuard, StudentGuard, SubscriptionGuard]
+      import('./features/subscription/components/checkout-success-component/checkout-success-component').then(
+        (m) => m.CheckoutSuccessComponent,
+      ),
+  },
+
+  {
+    path: 'checkout-cancel',
+    loadComponent: () =>
+      import('./features/subscription/components/checkout-cancel-component/checkout-cancel-component').then(
+        (m) => m.CheckoutCancelComponent,
+      ),
   },
 ];

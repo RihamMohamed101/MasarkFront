@@ -1,10 +1,12 @@
 import { ApplicationConfig, APP_INITIALIZER, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { ChatService } from './core/services/signalr';
+import { ChatSignalRService } from './core/services/signalr';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 // ميثود لتشغيل الخدمة عند بدء التطبيق
-export function initializeSignalR(signalrService: ChatService) {
+export function initializeSignalR(signalrService: ChatSignalRService) {
   return () => {
     // بمجرد عمل الحقل، الـ Constructor الخاص بالخدمة سيعمل ويبدأ الاتصال
   };
@@ -12,14 +14,16 @@ export function initializeSignalR(signalrService: ChatService) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }), 
+    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    // ⬅️ أضف هذا الجزء لضمان عمل الخدمة فوراً
+
+    provideHttpClient(withInterceptors([authInterceptor])),
+
     {
       provide: APP_INITIALIZER,
       useFactory: initializeSignalR,
-      deps: [ChatService],
-      multi: true
-    }
-  ]
+      deps: [ChatSignalRService],
+      multi: true,
+    },
+  ],
 };
