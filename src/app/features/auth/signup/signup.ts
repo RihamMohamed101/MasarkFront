@@ -17,13 +17,7 @@ export class Signup {
   public authState = inject(AuthStateService);
   private router = inject(Router);
 
-  // الأدوار المتاحة بناءً على الـ DTO الخاص بك
-  roles: Array<'Admin' | 'Teacher' | 'Student' | 'Parent'> = [
-    'Admin',
-    'Teacher',
-    'Student',
-    'Parent',
-  ];
+
 
   // بناء حقول الفورم مع الـ Validation
   registerForm = this.fb.nonNullable.group({
@@ -33,7 +27,6 @@ export class Signup {
     confirmPassword: ['', [Validators.required]],
     phone: [''],
     country: [''],
-    role: ['Student' as 'Admin' | 'Teacher' | 'Student' | 'Parent', [Validators.required]],
   });
 
   onSubmit() {
@@ -62,7 +55,7 @@ export class Signup {
       confirmPassword: formValues.confirmPassword,
       phone: formValues.phone || undefined,
       country: formValues.country || undefined,
-      role: formValues.role,
+      role: 'Student',
     };
 
     this.authApi.register(requestData).subscribe({
