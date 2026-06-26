@@ -1,11 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
-  PlanDto, SubscriptionDto, SubscriptionStatusResponse,
-  InitiateCheckoutRequest, CheckoutResult,
-  AdminActivateRequest, PagedResult, SubscriptionFilter
-} from '../models/subscription.model'
+  PlanDto,
+  SubscriptionDto,
+  SubscriptionStatusResponse,
+  InitiateCheckoutRequest,
+  CheckoutResult,
+  AdminActivateRequest,
+  PagedResult,
+  SubscriptionFilter,
+} from '../models/subscription.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -24,9 +29,15 @@ export class SubscriptionApiService {
     const body: InitiateCheckoutRequest = {
       planId,
       successUrl: environment.stripeSuccessUrl,
-      cancelUrl:  environment.stripeCancelUrl,
+      cancelUrl: environment.stripeCancelUrl,
     };
-    return this.http.post<CheckoutResult>(`${this.base}/checkout`, body);
+
+    const token = localStorage.getItem('masarak_access_token');
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+
+    return this.http.post<CheckoutResult>(`${this.base}/checkout`, body, { headers });
   }
 
   // ── User subscription ───────────────────────────────────────────────────────
@@ -45,10 +56,11 @@ export class SubscriptionApiService {
   getAllSubscriptions(filter: SubscriptionFilter): Observable<PagedResult<SubscriptionDto>> {
     let params = new HttpParams()
       .set('pageNumber', filter.pageNumber.toString())
-      .set('pageSize',   filter.pageSize.toString());
+      .set('pageSize', filter.pageSize.toString());
     if (filter.status) params = params.set('status', filter.status);
     return this.http.get<PagedResult<SubscriptionDto>>(
-      `${environment.apiUrl}/admin/subscriptions`, { params }
+      `${environment.apiUrl}/admin/subscriptions`,
+      { params },
     );
   }
 

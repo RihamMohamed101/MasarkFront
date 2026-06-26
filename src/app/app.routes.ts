@@ -103,32 +103,35 @@ export const routes: Routes = [
   {
     path: 'plans',
     loadComponent: () =>
-      import('./features/subscription/components/plans-component/plans-component').then(
-        (m) => m.PlansComponent,
+      import('./features/subscription/pages/plans/plans.component').then(
+        (m) => m.PlansPageComponent,
       ),
   },
 
   {
     path: 'my-subscription',
     loadComponent: () =>
-      import('./features/subscription/components/my-subscription-component/my-subscription-component').then(
-        (m) => m.MySubscriptionComponent,
+      import('./features/subscription/pages/my-subscription/my-subscription.component').then(
+        (m) => m.MySubscriptionPageComponent,
       ),
   },
 
   {
     path: 'checkout-success',
     loadComponent: () =>
-      import('./features/subscription/components/checkout-success-component/checkout-success-component').then(
-        (m) => m.CheckoutSuccessComponent,
+      import('./features/subscription/pages/checkout-success/checkout-success.component').then(
+        (m) => m.CheckoutSuccessPageComponent,
       ),
   },
 
   {
     path: 'checkout-cancel',
     loadComponent: () =>
-      import('./features/subscription/components/checkout-cancel-component/checkout-cancel-component').then(
-        (m) => m.CheckoutCancelComponent,
+      import('./features/subscription/pages/checkout-cancel/checkout-cancel.component').then(
+        (m) => m.CheckoutCancelPageComponent,
       ),
   },
+
+    { path: '**', redirectTo: '' },
+
 ];
