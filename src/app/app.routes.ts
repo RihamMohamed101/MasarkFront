@@ -4,14 +4,10 @@ import { Landing } from './features/landing/landing';
 import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-layout';
 import { AdminComponent } from './features/admin/adminComponent/admin';
 import { TeacherComponent } from './features/teacher/teacherComponent/teacher';
-import { Courses } from './features/student/components/courses/courses';
-import { StudentComponent } from './features/student/studentComponent/student';
 import { TeacherCourses } from './features/teacher/components/teacher-courses/teacher-courses';
 import { UserManagement } from './features/admin/components/user-management/user-management';
 import { TeacherStudents } from './features/teacher/components/teacher-students/teacher-students';
 import { TeacherAssignments } from './features/teacher/components/teacher-assignments/teacher-assignments';
-import { LessonLibrary } from './features/student/components/lesson-library/lesson-library';
-import { StudentAssignments } from './features/student/components/student-assignments/student-assignments';
 import { guestGuard } from './core/guards/guest-guard-guard';
 import { AcademicManagementComponent } from './features/admin/components/academic-management/academic-management';
 import { AdminPerformanceComponent } from './features/admin/components/admin-performance/admin-performance';
@@ -69,15 +65,10 @@ export const routes: Routes = [
     children: [
       {
         path: 'student',
-        children: [
-          { path: '', component: StudentComponent },
+        loadChildren: () =>
+          import('./features/student/routes/student.routes').then((m) => m.STUDENT_ROUTES),
           // يفتح لوحة التحكم على رابط: dashboard/student
-          { path: 'courses', component: Courses },
-
-          { path: 'library', component: LessonLibrary },
-
-          { path: 'assignments', component: StudentAssignments },
-        ],
+          
       }, // محتوى الطالب
       {
         path: 'teacher',
