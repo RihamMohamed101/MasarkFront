@@ -13,7 +13,17 @@
       </div>
 
       <nav class="space-y-2">
-        @if (userRole === 'student') {
+        @if (userRole() !== 'Admin') {
+          <a
+            routerLink="/plans"
+            routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <span>💳</span> الخطط والاشتراكات
+          </a>
+        }
+
+        @if (userRole() === 'Student') {
           <a
             routerLink="student"
             routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
@@ -41,7 +51,7 @@
           >
             <span>📚</span> الواجبات
           </a>
-        } @else if (userRole === 'teacher') {
+        } @else if (userRole() === 'Teacher') {
           <a
             routerLink="teacher"
             routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
@@ -69,7 +79,7 @@
           >
             <span>👥</span> الواجبات
           </a>
-        } @else if (userRole === 'admin') {
+        } @else if (userRole() === 'Admin') {
           <a
             routerLink="admin"
             routerLinkActive="bg-[#E2EDFA] text-[#4F8CD4]"
@@ -90,6 +100,8 @@
     </div>
 
     <button
+      type="button"
+      (click)="logout()"
       class="flex items-center gap-3 px-4 py-3 rounded-xl text-rose-600 font-semibold hover:bg-rose-50 transition-colors"
     >
       <span>🚪</span> تسجيل الخروج
@@ -111,12 +123,13 @@
 
       <div class="flex items-center gap-4">
         <div class="text-left md:text-right">
-          <h4 class="font-bold text-slate-800">{{ userName }}</h4>
-          <p class="text-xs text-slate-500">{{ userRoleDisplay }}</p>
+          <h4 class="font-bold text-slate-800">{{ userName()?.fullName ?? 'User' }}</h4>
+          <p class="text-xs text-slate-500">{{ userRoleDisplay()?.role ?? 'User' }}</p>
         </div>
         <img
           [src]="userAvatar"
-          class="w-10 h-10 rounded-full object-cover border-2 border-blue-100"
+          (error)="$event.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%2394a3b8\'%3E%3Cpath d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/%3E%3C/svg%3E'"
+          class="w-10 h-10 rounded-full object-cover border-2 border-blue-100 bg-slate-100"
           alt="Avatar"
         />
       </div>

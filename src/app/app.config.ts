@@ -1,4 +1,4 @@
-import { ApplicationConfig, APP_INITIALIZER, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { ChatSignalRService } from './core/services/signalr';
@@ -14,7 +14,7 @@ export function initializeSignalR(signalrService: ChatSignalRService) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes),
 
     provideHttpClient(withInterceptors([authInterceptor])),
