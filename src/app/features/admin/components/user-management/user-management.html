@@ -70,6 +70,7 @@
       <table class="um-table">
         <thead>
           <tr>
+            <th>ID</th>
             <th>المستخدم</th>
             <th>الدور</th>
             <th>الحالة</th>
@@ -82,6 +83,10 @@
         </thead>
         <tbody>
           <tr *ngFor="let user of filteredUsers()" class="um-row">
+            <!-- ID -->
+            <td>
+              <span class="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-1 rounded">{{ user.id }}</span>
+            </td>
             <!-- User -->
             <td>
               <div class="user-cell">
@@ -129,13 +134,20 @@
             <td class="center">
               <div class="action-btns">
                 <button class="btn-edit" (click)="openEditModal(user)">تعديل</button>
-                <button *ngIf="user.source === 'manual'" class="btn-delete" (click)="deleteUser(user.id)">حذف</button>
+                <button class="btn-delete" (click)="deleteUser(user)">حذف</button>
+                <button
+                  *ngIf="user.subscription && user.subscription.status === 'Active'"
+                  class="btn-cancel"
+                  (click)="cancelSubscription(user.id, 0)"
+                  title="إلغاء الاشتراك">
+                  🚫 إلغاء الاشتراك
+                </button>
               </div>
             </td>
           </tr>
           <!-- Empty state -->
           <tr *ngIf="filteredUsers().length === 0">
-            <td colspan="8" class="empty-state">لا يوجد مستخدمون يطابقون البحث</td>
+            <td colspan="9" class="empty-state">لا يوجد مستخدمون يطابقون البحث</td>
           </tr>
         </tbody>
       </table>
@@ -299,6 +311,16 @@
       <div class="form-group">
         <label class="form-label">البريد الإلكتروني</label>
         <input class="um-input" [(ngModel)]="form.email" placeholder="example@email.com" type="email" />
+      </div>
+
+      <div class="form-group" *ngIf="!isEditing()">
+        <label class="form-label">كلمة المرور <span style="color:red">*</span></label>
+        <input class="um-input" [(ngModel)]="form.password" placeholder="8 أحرف على الأقل" type="password" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">رقم الهاتف (اختياري)</label>
+        <input class="um-input" [(ngModel)]="form.phone" placeholder="مثال: 0501234567" type="tel" />
       </div>
 
       <div class="form-row">

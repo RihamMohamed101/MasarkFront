@@ -13,6 +13,9 @@ import { TeacherAssignments } from './features/teacher/components/teacher-assign
 import { LessonLibrary } from './features/student/components/lesson-library/lesson-library';
 import { StudentAssignments } from './features/student/components/student-assignments/student-assignments';
 import { guestGuard } from './core/guards/guest-guard-guard';
+import { AcademicManagementComponent } from './features/admin/components/academic-management/academic-management';
+import { AdminPerformanceComponent } from './features/admin/components/admin-performance/admin-performance';
+import { TeachersDirectoryComponent } from './features/academic/pages/admin/teachers-list/teachers-list.component';
 // import { AuthGuard, AdminGuard, TeacherGuard, StudentGuard, SubscriptionGuard } from '../core/guards';
 
 export const routes: Routes = [
@@ -91,6 +94,9 @@ export const routes: Routes = [
           { path: '', component: AdminComponent },
 
           { path: 'users', component: UserManagement },
+          { path: 'teachers', component: TeachersDirectoryComponent },
+          { path: 'academic', component: AcademicManagementComponent },
+          { path: 'performance', component: AdminPerformanceComponent },
         ],
       }, // محتوى المدير
     ],

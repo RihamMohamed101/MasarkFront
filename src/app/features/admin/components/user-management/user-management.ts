@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionApiService } from '../../../../core/services/subscription-api-service';
@@ -33,12 +34,16 @@ export interface AdminUser {
   styleUrl: './user-management.css',
 })
 export class UserManagement implements OnInit {
+  private readonly router = inject(Router);
   private readonly subApi = inject(SubscriptionApiService);
   private readonly authState = inject(AuthStateService);
   private readonly adminApi = inject(AdminApiService);
 
   private readonly usersStorageKey = 'masarak_admin_users_v2';
   private readonly subscriptionsStorageKey = 'masarak_student_subscriptions';
+
+  /** Negative IDs for locally-added (manual) users. Never clashes with backend int IDs. */
+  private nextManualId = -1;
 
   // ── State signals ─────────────────────────────────────────────────────────
   users = signal<AdminUser[]>([]);
@@ -72,6 +77,8 @@ export class UserManagement implements OnInit {
     email: '',
     role: 'Student',
     status: 'Active' as 'Active' | 'Inactive',
+    password: '',
+    phone: '',
   };
 
   // ── Computed ──────────────────────────────────────────────────────────────
@@ -184,7 +191,20 @@ export class UserManagement implements OnInit {
       const raw = localStorage.getItem(this.usersStorageKey);
       if (!raw) return [];
       const parsed = JSON.parse(raw) as AdminUser[];
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+
+      // Re-assign safe negative IDs to any old users that had huge Date.now() IDs
+      // (Int32 max is 2,147,483,647; anything over that is invalid for the backend)
+      const MAX_INT32 = 2_147_483_647;
+      let counter = this.nextManualId;
+      const fixed = parsed.map((u) => {
+        if (u.id > MAX_INT32 || u.id > 0) {
+          return { ...u, id: counter-- };
+        }
+        return u;
+      });
+      this.nextManualId = counter;
+      return fixed;
     } catch {
       return [];
     }
@@ -197,7 +217,7 @@ export class UserManagement implements OnInit {
 
   // ── Modal helpers ─────────────────────────────────────────────────────────
   openAddModal(): void {
-    this.form = { name: '', email: '', role: 'Student', status: 'Active' };
+    this.form = { name: '', email: '', role: 'Student', status: 'Active', password: '', phone: '' };
     this.selectedUser.set(null);
     this.isEditing.set(false);
     this.showAddModal.set(true);
@@ -206,7 +226,7 @@ export class UserManagement implements OnInit {
 
   openEditModal(user: AdminUser): void {
     this.selectedUser.set(user);
-    this.form = { name: user.name, email: user.email, role: user.role, status: user.status };
+    this.form = { name: user.name, email: user.email, role: user.role, status: user.status, password: '', phone: '' };
     this.isEditing.set(true);
     this.showAddModal.set(true);
     this.feedback.set(null);
@@ -227,6 +247,12 @@ export class UserManagement implements OnInit {
       return;
     }
 
+    const password = this.form.password?.trim();
+    if (!this.isEditing() && (!password || password.length < 8)) {
+      this.setFeedback('كلمة المرور مطلوبة وطولها 8 أحرف على الأقل', 'error');
+      return;
+    }
+
     const normalizedName = trimmedName.toLowerCase();
     const isDuplicate = this.users().some((u) => {
       const same = u.name.toLowerCase() === normalizedName;
@@ -239,35 +265,99 @@ export class UserManagement implements OnInit {
     }
 
     if (this.isEditing()) {
-      this.users.update((list) =>
-        list.map((u) =>
-          u.id === this.selectedUser()?.id
-            ? { ...u, name: trimmedName, email: this.form.email, role: this.form.role, status: this.form.status }
-            : u,
-        ),
-      );
-    } else {
-      const next: AdminUser = {
-        id: Date.now(),
+      // Editing existing user – keep local/manual handling for now
+      const updated: AdminUser = {
+        ...this.selectedUser()!,
         name: trimmedName,
         email: this.form.email,
         role: this.form.role,
         status: this.form.status,
-        joinedAt: new Date().toLocaleDateString('en-GB'),
-        source: 'manual',
-        subscription: null,
       };
-      this.users.update((list) => [next, ...list]);
+      this.users.update((list) => list.map((u) => (u.id === updated.id ? updated : u)));
+      this.persistManualUsers();
+      this.setFeedback('تم تعديل المستخدم بنجاح');
+      setTimeout(() => this.closeModal(), 900);
+      return;
     }
 
-    this.persistManualUsers();
-    this.setFeedback(this.isEditing() ? 'تم تعديل المستخدم بنجاح' : 'تمت إضافة المستخدم بنجاح');
-    setTimeout(() => this.closeModal(), 900);
+    // Creating a new user – use backend API
+    const req: any = {
+      fullName: trimmedName,
+      email: this.form.email,
+      password: this.form.password,
+      role: this.form.role,
+      phone: this.form.phone || undefined,
+    };
+
+    this.adminApi.createUser(req).subscribe({
+      next: (created) => {
+        // Map the returned user to our AdminUser shape
+        const newUser: AdminUser = {
+          id: created.userId,
+          name: created.fullName || created.email,
+          email: created.email,
+          role: created.role,
+          status: created.isActive ? 'Active' : 'Inactive',
+          joinedAt: this.formatDate(created.createdAt),
+          source: 'api',
+          subscription: null,
+        };
+        this.users.update((list) => [newUser, ...list]);
+        this.setFeedback('تمت إضافة المستخدم بنجاح');
+        setTimeout(() => this.closeModal(), 900);
+        // Refresh data to ensure teachers list updates
+        this.loadData();
+          if (created.role === 'Teacher') {
+            // Navigate to teachers page to see the new teacher
+            // navigation after creating teacher (if needed)
+            // this.router.navigate(['/dashboard/admin/teachers']);
+          }
+      },
+      error: () => {
+        this.setFeedback('فشل إنشاء المستخدم عبر الخادم. تأكد من صحة البيانات.', 'error');
+      },
+    });
   }
 
-  deleteUser(id: number): void {
-    this.users.update((list) => list.filter((u) => u.id !== id));
-    this.persistManualUsers();
+  deleteUser(user: AdminUser): void {
+    if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+
+    if (user.source === 'api') {
+      // Call the real API endpoint for backend users
+      this.adminApi.deleteUser(user.id).subscribe({
+        next: () => {
+          this.users.update((list) => list.filter((u) => u.id !== user.id));
+          this.setFeedback(`تم حذف المستخدم "${user.name}" بنجاح`);
+        },
+        error: () => {
+          this.setFeedback('تعذر حذف المستخدم من الخادم. يرجى المحاولة مرة أخرى.', 'error');
+        },
+      });
+    } else {
+      // For manually-added local users, just remove from state
+      this.users.update((list) => list.filter((u) => u.id !== user.id));
+      this.persistManualUsers();
+      this.setFeedback(`تم حذف المستخدم "${user.name}" بنجاح`);
+    }
+  }
+
+  cancelSubscription(userId: number, subscriptionId: number): void {
+    if (!confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')) return;
+    this.subApi.adminCancel(subscriptionId, 'إلغاء من لوحة الإدارة').subscribe({
+      next: () => {
+        this.users.update((list) =>
+          list.map((u) =>
+            u.id === userId && u.subscription
+              ? { ...u, subscription: { ...u.subscription, status: 'Cancelled' } }
+              : u,
+          ),
+        );
+        this.setFeedback('تم إلغاء الاشتراك بنجاح');
+      },
+      error: () => {
+        this.setFeedback('تعذر إلغاء الاشتراك. يرجى المحاولة مرة أخرى.', 'error');
+      },
+    });
   }
 
   // ── Subscription assignment ────────────────────────────────────────────────

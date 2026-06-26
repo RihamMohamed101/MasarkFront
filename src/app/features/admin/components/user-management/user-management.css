@@ -334,6 +334,21 @@
 }
 .btn-delete:hover { background: #ffe4e6; }
 
+.btn-cancel {
+  padding: 0.3rem 0.75rem;
+  background: #fff7ed;
+  color: #c2410c;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-cancel:hover { background: #ffedd5; }
+
 /* Empty state */
 .empty-state {
   text-align: center;
