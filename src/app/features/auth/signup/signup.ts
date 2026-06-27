@@ -27,6 +27,7 @@ export class Signup {
     confirmPassword: ['', [Validators.required]],
     phone: [''],
     country: [''],
+    role: ['Student' as 'Student' | 'Parent', [Validators.required]],
   });
 
   onSubmit() {
@@ -55,7 +56,7 @@ export class Signup {
       confirmPassword: formValues.confirmPassword,
       phone: formValues.phone || undefined,
       country: formValues.country || undefined,
-      role: 'Student',
+      role: formValues.role,
     };
 
     this.authApi.register(requestData).subscribe({
